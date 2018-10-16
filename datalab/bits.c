@@ -183,7 +183,8 @@ int bitAnd(int x, int y) {
  *   Rating: 2
  */
 int getByte(int x, int n) {
-  return 2;
+	int new_x = ( x >> (n<<3));
+	return new_x&0xFF;
 }
 /* 
  * logicalShift - shift x to the right by n, using a logical shift
@@ -194,7 +195,12 @@ int getByte(int x, int n) {
  *   Rating: 3 
  */
 int logicalShift(int x, int n) {
-  return 2;
+  int new_x = x>>n;
+  //int mask = ~((1&!(!n))<<31);
+  int mask = ~(( (~0) << ( (31 + (~n+1)) ))<<1);
+  //mask = mask + ~(!0);
+  //return new_x + (1<<(32+(~n+1)));
+  return new_x & mask;
 }
 /*
  * bitCount - returns count of number of 1's in word
@@ -204,7 +210,24 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int bitCount(int x) {
-  return 2;
+	int countmask = 1;
+	int result = 0;
+	countmask = countmask | (countmask<<8);
+	countmask = countmask | (countmask<<16);
+
+	result = result + (countmask & x);
+	result = result + (countmask & (x>>1));
+	result = result + (countmask & (x>>2));
+	result = result + (countmask & (x>>3));
+	result = result + (countmask & (x>>4));
+	result = result + (countmask & (x>>5));
+	result = result + (countmask & (x>>6));
+	result = result + (countmask & (x>>7));
+
+	result = result + (result>>16);
+	result = (result + (result>>8))&0xFF;
+	
+  return result;
 }
 //#include "bang.c"
 //#include "tmin.c"
@@ -238,12 +261,24 @@ int isEqual(int x, int y) {
  *   Rating: 2
  */
 int fitsBits(int x, int n) {
-  return 2;
+ // int mask = ~(( (~0) << ( (31+(~n+1)) )) << 1);
+ // int result_1 = (x>>n)&mask;
+ // int result_2 = ((~x+1)>>n)&mask;
+ // result_1 = !(!(result_1));
+ // result_2 = !(!(result_2));
+ // return result_1 | result_2;
+	//int result = x>>n;
+//	int mask = ~(( (~0) << n))<<1;
+	int shift = 32 + (~n+1);
+	int result = x<<shift;
+	result = result >> shift;
+	result = result^x;
+	return !result;
 }
 //#include "divpwr2.c"
 //#include "negate.c"
 //#include "isPositive.c"
-/* 
+/*
  * isLessOrEqual - if x <= y  then return 1, else return 0 
  *   Example: isLessOrEqual(4,5) = 1.
  *   Legal ops: ! ~ & ^ | + << >>
@@ -251,7 +286,16 @@ int fitsBits(int x, int n) {
  *   Rating: 3
  */
 int isLessOrEqual(int x, int y) {
-  return 2;
+  //int result_1 = !(x^y) ;
+  //int result_2 = !(((x+(~y+1))>>31)^(~0));i
+	int check = (((y+ (~x+1))>>31)&1);
+
+	int sign = 1<<31;
+	int signx = sign&x;
+	int signy = sign&y;
+	int xo = signx^signy;
+	xo = (xo>>31)&1;
+	return (((xo&(signx>>31))|((!check&!xo))));
 }
 /* 
  * rotateLeft - Rotate x to the left by n
@@ -262,7 +306,15 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 3 
  */
 int rotateLeft(int x, int n) {
-  return 2;
+  int mask_1 = ~(( (~0) << ( (31+(~n+1)) )) <<1);
+  int mask_2 = (( (~0) << ( (31+(~n+1)) )) << 1);
+  int mask_3 = ~( (~0) << n);
+
+  int result_1 = (x&mask_1)<<n;
+  int result_2 = (x&mask_2)>>(32+(~n+1));
+  result_2 = result_2 & mask_3;
+ 
+  return result_1|result_2;
 }
 //#include "ilog2.c"
 //#include "float_neg.c"
